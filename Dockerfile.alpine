@@ -1,0 +1,25 @@
+# Docker image for the Drone Slack Blame plugin
+#
+#     cd $GOPATH/src/github.com/drone-plugins/drone-slack-blame
+#     docker build --file=Dockerfile.alpine --rm=true -t plugins/drone-slack-blame .
+
+FROM alpine:3.2
+
+ENV GOROOT=/usr/lib/go \
+    GOPATH=/gopath     \
+    GOBIN=/gopath/bin  \
+    CGO_ENABLED=0      \
+    PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
+WORKDIR /gopath/src/github.com/drone-plugins/drone-slack-blame
+ADD . /gopath/src/github.com/drone-plugins/drone-slack-blame
+
+RUN apk add -U go ca-certificates             && \
+  go get                                      && \
+  go build -a -tags netgo                     && \
+  apk del go                                  && \
+  mv drone-slack-blame /bin/drone-slack-blame && \
+  rm -rf /gopath                              && \
+  rm -rf /var/cache/apk/*
+
+ENTRYPOINT ["/bin/drone-slack-blame"]
