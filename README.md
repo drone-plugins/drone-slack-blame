@@ -36,7 +36,7 @@ the channel on important branches such as release or master.
     },
     "vargs": {
         "token": "xxxxxx",
-        "channel": "webhook3",
+        "channel": "#dev",
         "success": {
             "username": "Happy Keanu (on behalf of Drone)",
             "icon": ":happy_keanu:",
@@ -95,7 +95,7 @@ docker run -i plugins/drone-slack-blame <<EOF
     },
     "vargs": {
         "token": "xxxxxx",
-        "channel": "webhook3",
+        "channel": "#dev",
         "success": {
             "username": "Happy Keanu (on behalf of Drone)",
             "icon": ":happy_keanu:",
