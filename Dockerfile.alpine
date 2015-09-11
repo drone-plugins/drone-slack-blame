@@ -14,7 +14,7 @@ ENV GOROOT=/usr/lib/go \
 WORKDIR /gopath/src/github.com/drone-plugins/drone-slack-blame
 ADD . /gopath/src/github.com/drone-plugins/drone-slack-blame
 
-RUN apk add -U go ca-certificates             && \
+RUN apk add -U go ca-certificates git         && \
   go get                                      && \
   go build -a -tags netgo                     && \
   apk del go                                  && \
