@@ -27,9 +27,11 @@ type MessageOptions struct {
 func main() {
 	repo := plugin.Repo{}
 	build := plugin.Build{}
+	system := plugin.System{}
 	vargs := Slack{}
 
 	plugin.Param("build", &build)
+	plugin.Param("system", &system)
 	plugin.Param("repo", &repo)
 	plugin.Param("vargs", &vargs)
 
@@ -40,7 +42,7 @@ func main() {
 	}
 
 	// setup the message
-	buildLink := fmt.Sprintf("%s/%d", repo.Self, build.Number)
+	buildLink := fmt.Sprintf("%s/%s/%d", system.Link, repo.FullName, build.Number)
 	var messageOptions MessageOptions
 	var color string
 	var messageText string
@@ -90,7 +92,7 @@ func main() {
 	messageParams.Attachments = []slack.Attachment{attachment}
 
 	// get the commit author
-	commitAuthor := build.Commit.Author.Email
+	commitAuthor := build.Email
 
 	// create the slack api
 	api := slack.New(vargs.Token)
@@ -105,6 +107,8 @@ func main() {
 
 	for _, user := range users {
 		if user.Profile.Email == commitAuthor {
+			fmt.Printf("%s\n", user.Name)
+			fmt.Printf("%s\n", user.Profile.Email)
 			blameUser = &user
 			break
 		}
@@ -127,7 +131,7 @@ func main() {
 			fmt.Printf("Could not notify user %s!\n", userAt)
 		}
 	} else {
-		userAt = build.Commit.Author.Login
+		userAt = build.Author
 		fmt.Print("User could not be found")
 	}
 
