@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/drone/drone-plugin-go/plugin"
@@ -137,6 +138,10 @@ func main() {
 
 	// notify the channel if requested
 	if len(vargs.Channel) != 0 {
+		if !strings.HasPrefix(vargs.Channel, "#") {
+			vargs.Channel = "#" + vargs.Channel
+		}
+
 		_, _, err := api.PostMessage(vargs.Channel, fmt.Sprintf("%s %s %s", messageOptions.Message, channelText, userAt), messageParams)
 
 		if err == nil {
