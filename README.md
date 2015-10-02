@@ -17,26 +17,25 @@ the channel on important branches such as release or master.
     "repo" : {
         "owner": "foo",
         "name": "bar",
-        "self_url": "http://my.drone.io/foo/bar"
+        "full_name": "foo/bar"
+    },
+    "system": {
+        "link_url": "http://mydrone.io"
     },
     "build" : {
         "number": 22,
         "status": "failed",
         "started_at": 1421029603,
         "finished_at": 1421029813,
-        "head_commit": {
-            "sha": "9f2849d5",
-            "branch": "master",
-            "message": "Update the Readme",
-            "author": {
-                "login": "johnsmith",
-                "email": "john.smith@gmail.com"
-            }
-        }
+        "commit": "9f2849d5",
+        "branch": "master",
+        "message": "Update the Readme",
+        "author": "johnsmith",
+        "author_email": "john.smith@gmail.com"
     },
     "vargs": {
         "token": "xxxxxx",
-        "channel": "#dev",
+        "channel": "dev",
         "success": {
             "username": "Happy Keanu (on behalf of Drone)",
             "icon": ":happy_keanu:",
@@ -56,6 +55,7 @@ the channel on important branches such as release or master.
     }
 }
 EOF
+
 ```
 
 ## Docker
@@ -76,26 +76,25 @@ docker run -i plugins/drone-slack-blame <<EOF
     "repo" : {
         "owner": "foo",
         "name": "bar",
-        "self_url": "http://my.drone.io/foo/bar"
+        "full_name": "foo/bar"
+    },
+    "system": {
+        "link_url": "http://mydrone.io"
     },
     "build" : {
         "number": 22,
         "status": "failed",
         "started_at": 1421029603,
         "finished_at": 1421029813,
-        "head_commit": {
-            "sha": "9f2849d5",
-            "branch": "master",
-            "message": "Update the Readme",
-            "author": {
-                "login": "johnsmith",
-                "email": "john.smith@gmail.com"
-            }
-        }
+        "commit": "9f2849d5",
+        "branch": "master",
+        "message": "Update the Readme",
+        "author": "johnsmith",
+        "author_email": "john.smith@gmail.com"
     },
     "vargs": {
         "token": "xxxxxx",
-        "channel": "#dev",
+        "channel": "dev",
         "success": {
             "username": "Happy Keanu (on behalf of Drone)",
             "icon": ":happy_keanu:",
