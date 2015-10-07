@@ -4,6 +4,6 @@
 #     docker build --rm=true -t plugins/drone-slack-blame .
 
 FROM alpine:3.2
-RUN apk-install ca-certificates
+RUN apk add -U ca-certificates && rm -rf /var/cache/apk/*
 ADD drone-slack-blame /bin/
 ENTRYPOINT ["/bin/drone-slack-blame"]
