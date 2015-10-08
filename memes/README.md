@@ -19,7 +19,7 @@ Pull requests accepted for new images!
 
 ![Professor](professor_success.jpg)
 
-`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/grumpy_cat_fail.jpg`
+`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/professor_success.jpg`
 
 ## Failure
 
