@@ -34,3 +34,23 @@ Pull requests accepted for new images!
 ![Kittens](kittens_fail.jpg)
 
 `https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/kittens_fail.jpg`
+
+## Success Deploy
+
+![Success Kid](success_kid_deploy_success.jpg)
+
+`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/success_kid_deploy_success.jpg`
+
+## Failure Deploy
+
+![Grumpy Cat](grumpy_cat_deploy_fail.jpg)
+
+`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/grumpy_cat_deploy_fail.jpg`
+
+![Homer](homer_deploy_fail.jpg)
+
+`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/homer_deploy_fail.jpg`
+
+![Morpheus](morpheus_deploy_fail.jpg)
+
+`https://raw.githubusercontent.com/drone-plugins/drone-slack-blame/master/memes/morpheus_deploy_fail.jpg`
