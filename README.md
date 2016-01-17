@@ -1,4 +1,8 @@
 # drone-slack-blame
+
+[![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-slack-blame/status.svg)](http://beta.drone.io/drone-plugins/drone-slack-blame)
+[![](https://badge.imagelayers.io/plugins/drone-slack-blame:latest.svg)](https://imagelayers.io/?images=plugins/drone-slack-blame:latest 'Get your own badge on imagelayers.io')
+
 Drone plugin for sending Slack notifications
 
 ## Overview
