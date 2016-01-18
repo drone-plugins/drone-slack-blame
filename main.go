@@ -25,7 +25,13 @@ type MessageOptions struct {
 	ImageAttachments []string `json:"image_attachments"`
 }
 
+var (
+	buildDate string
+)
+
 func main() {
+	fmt.Printf("Drone Slack Blame Plugin built at %s\n", buildDate)
+
 	repo := plugin.Repo{}
 	build := plugin.Build{}
 	system := plugin.System{}
