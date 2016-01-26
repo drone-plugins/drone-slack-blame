@@ -3,6 +3,21 @@ direct message when a build completes. You will need to supply Drone with an
 access token to the Slack API. You can create a new access token here:
 https://api.slack.com/web
 
+
+
+
+## Overview
+
+This plugin is responsible for sending build notifications to developers when
+they break the build, either directly through slackbot messages, or to the
+designated channel. This lets developers get feedback on their own feature
+branches without bombarding the main development channel as well as notifying
+the channel on important branches such as release or master.
+
+
+
+
+
 The following parameters are used to configure the notification
 
 * **token** - the access token

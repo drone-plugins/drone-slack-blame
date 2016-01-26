@@ -1,41 +1,49 @@
 # drone-slack-blame
 
 [![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-slack-blame/status.svg)](http://beta.drone.io/drone-plugins/drone-slack-blame)
+[![Coverage Status](https://aircover.co/badges/drone-plugins/drone-slack-blame/coverage.svg)](https://aircover.co/drone-plugins/drone-slack-blame)
 [![](https://badge.imagelayers.io/plugins/drone-slack-blame:latest.svg)](https://imagelayers.io/?images=plugins/drone-slack-blame:latest 'Get your own badge on imagelayers.io')
 
-Drone plugin for sending Slack notifications
+Drone plugin to send build status blames via Slack
 
-## Overview
+## Binary
 
-This plugin is responsible for sending build notifications to developers when
-they break the build, either directly through slackbot messages, or to the
-designated channel. This lets developers get feedback on their own feature
-branches without bombarding the main development channel as well as notifying
-the channel on important branches such as release or master.
+Build the binary using `make`:
 
-## Usage
+```
+make deps build
+```
+
+### Example
 
 ```sh
 ./drone-slack-blame <<EOF
 {
-    "repo" : {
-        "owner": "foo",
-        "name": "bar",
-        "full_name": "foo/bar"
+    "repo": {
+        "clone_url": "git://github.com/drone/drone",
+        "owner": "drone",
+        "name": "drone",
+        "full_name": "drone/drone"
     },
     "system": {
-        "link_url": "http://mydrone.io"
+        "link_url": "https://beta.drone.io"
     },
-    "build" : {
+    "build": {
         "number": 22,
-        "status": "failed",
+        "status": "success",
         "started_at": 1421029603,
         "finished_at": 1421029813,
-        "commit": "9f2849d5",
-        "branch": "master",
         "message": "Update the Readme",
         "author": "johnsmith",
         "author_email": "john.smith@gmail.com"
+        "event": "push",
+        "branch": "master",
+        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
+        "ref": "refs/heads/master"
+    },
+    "workspace": {
+        "root": "/drone/src",
+        "path": "/drone/src/github.com/drone/drone"
     },
     "vargs": {
         "token": "xxxxxx",
@@ -59,42 +67,46 @@ the channel on important branches such as release or master.
     }
 }
 EOF
-
 ```
 
 ## Docker
 
-Build the Docker container. Note that we need to use the `-netgo` tag so that
-the binary is built without a CGO dependency:
+Build the container using `make`:
 
-```sh
-CGO_ENABLED=0 go build -a -tags netgo
-docker build --rm=true -t plugins/drone-slack .
+```
+make deps docker
 ```
 
-Send a Slack notification:
+### Example
 
 ```sh
 docker run -i plugins/drone-slack-blame <<EOF
 {
-    "repo" : {
-        "owner": "foo",
-        "name": "bar",
-        "full_name": "foo/bar"
+    "repo": {
+        "clone_url": "git://github.com/drone/drone",
+        "owner": "drone",
+        "name": "drone",
+        "full_name": "drone/drone"
     },
     "system": {
-        "link_url": "http://mydrone.io"
+        "link_url": "https://beta.drone.io"
     },
-    "build" : {
+    "build": {
         "number": 22,
-        "status": "failed",
+        "status": "success",
         "started_at": 1421029603,
         "finished_at": 1421029813,
-        "commit": "9f2849d5",
-        "branch": "master",
         "message": "Update the Readme",
         "author": "johnsmith",
         "author_email": "john.smith@gmail.com"
+        "event": "push",
+        "branch": "master",
+        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
+        "ref": "refs/heads/master"
+    },
+    "workspace": {
+        "root": "/drone/src",
+        "path": "/drone/src/github.com/drone/drone"
     },
     "vargs": {
         "token": "xxxxxx",
