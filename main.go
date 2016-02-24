@@ -26,11 +26,11 @@ type MessageOptions struct {
 }
 
 var (
-	buildDate string
+	buildCommit string
 )
 
 func main() {
-	fmt.Printf("Drone Slack Blame Plugin built at %s\n", buildDate)
+	fmt.Printf("Drone Slack Blame Plugin built from %s\n", buildCommit)
 
 	repo := plugin.Repo{}
 	build := plugin.Build{}
