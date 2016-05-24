@@ -28,6 +28,11 @@ func main() {
 			EnvVar: "PLUGIN_CHANNEL",
 		},
 		cli.StringFlag{
+			Name:  "mapping",
+			Usage: "mapping of authors to slack users",
+			EnvVar: "PLUGIN_MAPPING",
+		},
+		cli.StringFlag{
 			Name:   "success.username",
 			Usage:  "username for successful builds",
 			Value:  "drone",
@@ -140,7 +145,8 @@ func run(c *cli.Context) error {
 		},
 		Config: Config{
 			Token:   c.String("token"),
-			Channel:   c.String("channel"),
+			Channel: c.String("channel"),
+			Mapping: c.String("mapping"),
 			Success: MessageOptions{
 				Username:         c.String("success.username"),
 				Icon:             c.String("success.icon"),
