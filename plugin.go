@@ -143,20 +143,21 @@ func userMapping(value string) map[string]string {
 	mapping := []byte(contents(value))
 
 	// turn into a map
-	var values interface{}
+	values := map[string]string{}
 	err := json.Unmarshal(mapping, &values)
 
 	if err != nil {
 		if len(mapping) != 0 {
 			log.WithFields(log.Fields{
-				"mapping": mapping,
+				"mapping": value,
+				"error": err,
 			}).Error("Could not parse mapping")
 		}
 
-		return make(map[string]string)
-	} else {
-		return values.(map[string]string)
+		values = make(map[string]string)
 	}
+
+	return values
 }
 
 func contents(value string) string {
