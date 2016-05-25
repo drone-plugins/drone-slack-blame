@@ -98,9 +98,14 @@ func main() {
 			EnvVar: "DRONE_COMMIT_BRANCH",
 		},
 		cli.StringFlag{
-			Name:   "commit.author",
+			Name:   "commit.author.name",
 			Usage:  "git author name",
 			EnvVar: "DRONE_COMMIT_AUTHOR",
+		},
+		cli.StringFlag{
+			Name:   "commit.author.email",
+			Usage:  "git author email",
+			EnvVar: "DRONE_COMMIT_AUTHOR_EMAIL",
 		},
 		cli.StringFlag{
 			Name:   "build.event",
@@ -140,7 +145,8 @@ func run(c *cli.Context) error {
 			Status: c.String("build.status"),
 			Commit: c.String("commit.sha"),
 			Branch: c.String("commit.branch"),
-			Author: c.String("commit.author"),
+			Author: c.String("commit.author.name"),
+			Email:  c.String("commit.author.email"),
 			Link:   c.String("build.link"),
 		},
 		Config: Config{

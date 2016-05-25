@@ -23,6 +23,7 @@ type (
 		Commit string
 		Branch string
 		Author string
+		Email  string
 		Status string
 		Link   string
 	}
@@ -94,14 +95,18 @@ func findSlackUser(api *slack.Client, p Plugin) (*slack.User, error) {
 	var search searchFunc
 	var find string
 
-	if val, ok := mapping[p.Build.Author]; ok {
-		log.Info("Searching for user by name")
+	if val, ok := mapping[p.Build.Email]; ok {
+		log.WithFields(log.Fields{
+			"username": val,
+		}).Info("Searching for user by name")
 		search = checkUsername
 		find = val
 	} else {
-		log.Info("Searching for user by email")
+		log.WithFields(log.Fields{
+			"email": p.Build.Email,
+		}).Info("Searching for user by email")
 		search = checkEmail
-		find = p.Build.Author
+		find = p.Build.Email
 	}
 
 	if len(find) == 0 {
