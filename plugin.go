@@ -247,13 +247,18 @@ func createMessage(p Plugin) slack.PostMessageParameters {
 		IconEmoji: messageOptions.Icon,
 	}
 
-	imageCount := len(messageOptions.ImageAttachments)
-	rand.Seed(time.Now().UTC().UnixNano())
-
+	// create the attachment
 	attachment := slack.Attachment{
-		Color:    color,
-		Text:     messageText,
-		ImageURL: messageOptions.ImageAttachments[rand.Intn(imageCount)],
+		Color: color,
+		Text:  messageText,
+	}
+
+	// Add image if any are provided
+	imageCount := len(messageOptions.ImageAttachments)
+
+	if imageCount > 0 {
+		rand.Seed(time.Now().UTC().UnixNano())
+		attachment.ImageURL = messageOptions.ImageAttachments[rand.Intn(imageCount)]
 	}
 
 	messageParams.Attachments = []slack.Attachment{attachment}
