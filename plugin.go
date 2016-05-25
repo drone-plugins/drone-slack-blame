@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/nlopes/slack"
+	//"github.com/drone/drone-go/template"
 )
 
 type (
@@ -74,15 +78,45 @@ func (p Plugin) Exec() error {
 	blameUser, _ := findSlackUser(api, p)
 
 	// get the associated @ string
+	messageParams := createMessage(p)
 	var userAt string
 
 	if blameUser != nil {
 		userAt = fmt.Sprintf("@%s", blameUser.Name)
+
+		_, _, err := api.PostMessage(userAt, "", messageParams)
+
+		if err == nil {
+			log.WithFields(log.Fields{
+				"username": blameUser.Name,
+			}).Info("Notified user")
+		} else {
+			log.WithFields(log.Fields{
+				"username": blameUser.Name,
+			}).Error("Could not notify user")
+		}
 	} else {
 		userAt = p.Build.Author
 		log.WithFields(log.Fields{
 			"author": userAt,
 		}).Error("Could not find author")
+	}
+
+	if len(p.Config.Channel) != 0 {
+		if !strings.HasPrefix(p.Config.Channel, "#") {
+			p.Config.Channel = "#" + p.Config.Channel
+		}
+		_, _, err := api.PostMessage(p.Config.Channel, "", messageParams)
+
+		if err == nil {
+			log.WithFields(log.Fields{
+				"channel": p.Config.Channel,
+			}).Info("Channel notified")
+		} else {
+			log.WithFields(log.Fields{
+				"channel": p.Config.Channel,
+			}).Error("Unable to notify channel")
+		}
 	}
 
 	return nil
@@ -191,13 +225,38 @@ func checkUsername(user *slack.User, name string) bool {
 	return user.Name == name
 }
 
-func color(build Build) string {
-	switch build.Status {
-	case "success":
-		return "good"
-	case "failure", "error", "killed":
-		return "danger"
-	default:
-		return "warning"
+func createMessage(p Plugin) slack.PostMessageParameters {
+	var messageOptions MessageOptions
+	var color string
+	var messageText string
+
+	// Determine if the build was a success
+	if p.Build.Status == "success" {
+		messageOptions = p.Config.Success
+		color = "good"
+		messageText = "Build succeeded"
+	} else {
+		messageOptions = p.Config.Failure
+		color = "danger"
+		messageText = "Build failed"
 	}
+
+	// setup the message
+	messageParams := slack.PostMessageParameters{
+		Username:  messageOptions.Username,
+		IconEmoji: messageOptions.Icon,
+	}
+
+	imageCount := len(messageOptions.ImageAttachments)
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	attachment := slack.Attachment{
+		Color:    color,
+		Text:     messageText,
+		ImageURL: messageOptions.ImageAttachments[rand.Intn(imageCount)],
+	}
+
+	messageParams.Attachments = []slack.Attachment{attachment}
+
+	return messageParams
 }
