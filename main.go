@@ -28,8 +28,8 @@ func main() {
 			EnvVar: "PLUGIN_CHANNEL",
 		},
 		cli.StringFlag{
-			Name:  "mapping",
-			Usage: "mapping of authors to slack users",
+			Name:   "mapping",
+			Usage:  "mapping of authors to slack users",
 			EnvVar: "PLUGIN_MAPPING",
 		},
 		cli.StringFlag{

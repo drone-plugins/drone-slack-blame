@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/nlopes/slack"
@@ -155,7 +156,7 @@ func userMapping(value string) map[string]string {
 		if len(mapping) != 0 {
 			log.WithFields(log.Fields{
 				"mapping": value,
-				"error": err,
+				"error":   err,
 			}).Error("Could not parse mapping")
 		}
 
@@ -165,41 +166,21 @@ func userMapping(value string) map[string]string {
 	return values
 }
 
-func contents(value string) string {
-	u, err := url.Parse(value)
-	if err == nil {
-		switch u.Scheme {
-		case "http", "https":
-			res, err := http.Get(value)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("Could not retrieve contents")
-				return ""
-			}
-			defer res.Body.Close()
-			out, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("Could not read contents of remote file")
-				return ""
-			}
-			value = string(out)
-
-		case "file":
-			out, err := ioutil.ReadFile(u.Path)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("Could not read contents of local file")
-				return ""
-			}
-			value = string(out)
-		}
+func contents(s string) string {
+	if _, err := os.Stat(s); err == nil {
+		o, _ := ioutil.ReadFile(s)
+		return string(o)
 	}
-
-	return value
+	if _, err := url.Parse(s); err == nil {
+		resp, err := http.Get(s)
+		if err != nil {
+			return s
+		}
+		defer resp.Body.Close()
+		o, _ := ioutil.ReadAll(resp.Body)
+		return string(o)
+	}
+	return s
 }
 
 func checkEmail(user *slack.User, email string) bool {
