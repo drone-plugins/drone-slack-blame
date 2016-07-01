@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -12,16 +13,18 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone-go/template"
 	"github.com/nlopes/slack"
-	//"github.com/drone/drone-go/template"
 )
 
 type (
+	// Repo information.
 	Repo struct {
 		Owner string
 		Name  string
 	}
 
+	// Build information.
 	Build struct {
 		Event  string
 		Number int
@@ -33,6 +36,7 @@ type (
 		Link   string
 	}
 
+	// Config for the plugin.
 	Config struct {
 		Token   string
 		Channel string
@@ -41,6 +45,7 @@ type (
 		Failure MessageOptions
 	}
 
+	// MessageOptions contains the slack message.
 	MessageOptions struct {
 		Icon             string
 		Username         string
@@ -48,15 +53,25 @@ type (
 		ImageAttachments []string
 	}
 
+	// Plugin values
 	Plugin struct {
 		Repo   Repo
 		Build  Build
 		Config Config
 	}
 
+	// templatePayload contains values passed to the template
+	templatePayload struct {
+		Repo  Repo
+		Build Build
+		User  *slack.User
+	}
+
+	// searchFunc determines how to search for a slack user.
 	searchFunc func(*slack.User, string) bool
 )
 
+// Exec executes the plugin.
 func (p Plugin) Exec() error {
 	// create the API
 	api := slack.New(p.Config.Token)
@@ -65,20 +80,19 @@ func (p Plugin) Exec() error {
 	authResponse, err := api.AuthTest()
 
 	if err != nil {
-		log.Error("Could not authenticate with Slack API token")
 		return err
-	} else {
-		log.WithFields(log.Fields{
-			"team": authResponse.Team,
-			"user": authResponse.User,
-		}).Info("Successfully authenticated with Slack API")
 	}
+
+	log.WithFields(log.Fields{
+		"team": authResponse.Team,
+		"user": authResponse.User,
+	}).Info("Successfully authenticated with Slack API")
 
 	// get the user
 	blameUser, _ := findSlackUser(api, p)
 
 	// get the associated @ string
-	messageParams := createMessage(p)
+	messageParams := createMessage(p, blameUser)
 	var userAt string
 
 	if blameUser != nil {
@@ -122,6 +136,8 @@ func (p Plugin) Exec() error {
 	return nil
 }
 
+// findSlackUser uses the slack API to find the user who made the commit that
+// is being built.
 func findSlackUser(api *slack.Client, p Plugin) (*slack.User, error) {
 	// get the mapping
 	mapping := userMapping(p.Config.Mapping)
@@ -145,8 +161,7 @@ func findSlackUser(api *slack.Client, p Plugin) (*slack.User, error) {
 	}
 
 	if len(find) == 0 {
-		log.Error("No user to search for")
-		return nil, nil
+		return nil, errors.New("No user to search for")
 	}
 
 	// search for the user
@@ -179,6 +194,7 @@ func findSlackUser(api *slack.Client, p Plugin) (*slack.User, error) {
 	return blameUser, nil
 }
 
+// userMapping gets the user mapping file.
 func userMapping(value string) map[string]string {
 	mapping := []byte(contents(value))
 
@@ -200,6 +216,8 @@ func userMapping(value string) map[string]string {
 	return values
 }
 
+// contents gets the value referenced either in a local filem, a URL or the
+// string value itself.
 func contents(s string) string {
 	if _, err := os.Stat(s); err == nil {
 		o, _ := ioutil.ReadFile(s)
@@ -217,28 +235,31 @@ func contents(s string) string {
 	return s
 }
 
+// checkEmail sees if the email is used by the user.
 func checkEmail(user *slack.User, email string) bool {
 	return user.Profile.Email == email
 }
 
+// checkUsername sees if the username is the same as the user.
 func checkUsername(user *slack.User, name string) bool {
 	return user.Name == name
 }
 
-func createMessage(p Plugin) slack.PostMessageParameters {
+// createMessage generates the message to post to Slack.
+func createMessage(p Plugin, user *slack.User) slack.PostMessageParameters {
 	var messageOptions MessageOptions
 	var color string
-	var messageText string
+	var messageTitle string
 
 	// Determine if the build was a success
 	if p.Build.Status == "success" {
 		messageOptions = p.Config.Success
 		color = "good"
-		messageText = "Build succeeded"
+		messageTitle = "Build succeeded"
 	} else {
 		messageOptions = p.Config.Failure
 		color = "danger"
-		messageText = "Build failed"
+		messageTitle = "Build failed"
 	}
 
 	// setup the message
@@ -247,16 +268,34 @@ func createMessage(p Plugin) slack.PostMessageParameters {
 		IconEmoji: messageOptions.Icon,
 	}
 
+	// setup the payload
+	payload := templatePayload{
+		Build: p.Build,
+		Repo:  p.Repo,
+		User:  user,
+	}
+
+	messageText, err := template.Render(messageOptions.Template, &payload)
+
+	if err != nil {
+		log.Error("Could not parse template")
+	}
+
 	// create the attachment
 	attachment := slack.Attachment{
-		Color: color,
-		Text:  messageText,
+		Color:     color,
+		Text:      messageText,
+		Title:     messageTitle,
+		TitleLink: p.Build.Link,
 	}
 
 	// Add image if any are provided
 	imageCount := len(messageOptions.ImageAttachments)
 
 	if imageCount > 0 {
+		log.WithFields(log.Fields{
+			"count": imageCount,
+		}).Info("Choosing from images")
 		rand.Seed(time.Now().UTC().UnixNano())
 		attachment.ImageURL = messageOptions.ImageAttachments[rand.Intn(imageCount)]
 	}

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -33,46 +33,46 @@ func main() {
 			EnvVar: "PLUGIN_MAPPING",
 		},
 		cli.StringFlag{
-			Name:   "success.username",
+			Name:   "success_username",
 			Usage:  "username for successful builds",
 			Value:  "drone",
 			EnvVar: "PLUGIN_SUCCESS_USERNAME",
 		},
 		cli.StringFlag{
-			Name:   "success.icon",
+			Name:   "success_icon",
 			Usage:  "icon for successful builds",
 			Value:  ":drone:",
 			EnvVar: "PLUGIN_SUCCESS_ICON",
 		},
 		cli.StringFlag{
-			Name:   "success.template",
+			Name:   "success_template",
 			Usage:  "template for successful builds",
 			EnvVar: "PLUGIN_SUCCESS_TEMPLATE",
 		},
 		cli.StringSliceFlag{
-			Name:   "success.image_attachments",
+			Name:   "success_image_attachments",
 			Usage:  "image attachments for successful builds",
 			EnvVar: "PLUGIN_SUCCESS_IMAGE_ATTACHMENTS",
 		},
 		cli.StringFlag{
-			Name:   "failure.username",
+			Name:   "failure_username",
 			Usage:  "username for failed builds",
 			Value:  "drone",
 			EnvVar: "PLUGIN_FAILURE_USERNAME",
 		},
 		cli.StringFlag{
-			Name:   "failure.icon",
+			Name:   "failure_icon",
 			Usage:  "icon for failed builds",
 			Value:  ":drone:",
 			EnvVar: "PLUGIN_FAILURE_ICON",
 		},
 		cli.StringFlag{
-			Name:   "failure.template",
+			Name:   "failure_template",
 			Usage:  "template for failed builds",
 			EnvVar: "PLUGIN_FAILURE_TEMPLATE",
 		},
 		cli.StringSliceFlag{
-			Name:   "failure.image_attachments",
+			Name:   "failure_image_attachments",
 			Usage:  "image attachments for failed builds",
 			EnvVar: "PLUGIN_FAILURE_IMAGE_ATTACHMENTS",
 		},
@@ -154,22 +154,22 @@ func run(c *cli.Context) error {
 			Channel: c.String("channel"),
 			Mapping: c.String("mapping"),
 			Success: MessageOptions{
-				Username:         c.String("success.username"),
-				Icon:             c.String("success.icon"),
-				Template:         c.String("success.template"),
-				ImageAttachments: c.StringSlice("success.image_attachments"),
+				Username:         c.String("success_username"),
+				Icon:             c.String("success_icon"),
+				Template:         c.String("success_template"),
+				ImageAttachments: c.StringSlice("success_image_attachments"),
 			},
 			Failure: MessageOptions{
-				Username:         c.String("failure.username"),
-				Icon:             c.String("failure.icon"),
-				Template:         c.String("failure.template"),
-				ImageAttachments: c.StringSlice("failure.image_attachments"),
+				Username:         c.String("failure_username"),
+				Icon:             c.String("failure_icon"),
+				Template:         c.String("failure_template"),
+				ImageAttachments: c.StringSlice("failure_image_attachments"),
 			},
 		},
 	}
 
 	if err := plugin.Exec(); err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		os.Exit(1)
 	}
 
