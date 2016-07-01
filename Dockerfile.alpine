@@ -3,7 +3,7 @@
 #     cd $GOPATH/src/github.com/drone-plugins/drone-slack-blame
 #     docker build --file=Dockerfile.alpine --rm=true -t plugins/drone-slack-blame .
 
-FROM alpine:3.2
+FROM alpine:3.4
 
 ENV GOROOT=/usr/lib/go \
     GOPATH=/gopath     \
