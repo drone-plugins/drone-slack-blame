@@ -264,8 +264,15 @@ func createMessage(p Plugin, user *slack.User) slack.PostMessageParameters {
 
 	// setup the message
 	messageParams := slack.PostMessageParameters{
-		Username:  messageOptions.Username,
-		IconEmoji: messageOptions.Icon,
+		Username: messageOptions.Username,
+	}
+
+	if strings.HasPrefix(messageOptions.Icon, "http") {
+		log.Info("Icon is a URL")
+		messageParams.IconURL = messageOptions.Icon
+	} else {
+		log.Info("Icon is an emoji")
+		messageParams.IconEmoji = messageOptions.Icon
 	}
 
 	// setup the payload
