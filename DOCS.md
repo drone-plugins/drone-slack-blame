@@ -83,15 +83,12 @@ The following is a simple Slack Blame configuration in your .drone.yml file:
 notify:
   slack_blame:
     channel: dev
-    success_username: Happy Keanu (on behalf of Drone)
-    success_icon: :happy_keanu:
     success_template: |
       The build is fixed! Thanks @{{slack.name}}
     success_image_attachments:
       - "http://i.imgur.com/TP4PIxc.jpg"
-    failure_username: Sad Keanu (on behalf of Drone)
-    failure_icon: ":sad_keanu:"
-    failure_template: "The build is broken! Blame {{slack.name}}"
+    failure_template: |
+      The build is broken! Blame {{slack.name}}
     failure_image_attachments:
       - "http://cdn.meme.am/instances/51000361.jpg"
 ```
