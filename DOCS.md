@@ -45,7 +45,7 @@ It is highly recommended to put the **SLACK_TOKEN** into a secret so it is not
 exposed to users. This can be done using the drone-cli.
 
 ```bash
-drone secret add --image=npm \
+drone secret add --image=slack-blame \
     octocat/hello-world SLACK_TOKEN xxxxxxx
 ```
 
