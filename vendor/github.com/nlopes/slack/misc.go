@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -14,8 +15,6 @@ import (
 	"path/filepath"
 	"time"
 )
-
-var HTTPClient = &http.Client{}
 
 type WebResponse struct {
 	Ok    bool      `json:"ok"`
@@ -78,7 +77,7 @@ func parseResponseBody(body io.ReadCloser, intf *interface{}, debug bool) error 
 
 	// FIXME: will be api.Debugf
 	if debug {
-		logger.Printf("parseResponseBody: %s\n", string(response))
+		log.Printf("parseResponseBody: %s\n", string(response))
 	}
 
 	err = json.Unmarshal(response, &intf)
@@ -91,7 +90,8 @@ func parseResponseBody(body io.ReadCloser, intf *interface{}, debug bool) error 
 
 func postWithMultipartResponse(path string, filepath string, values url.Values, intf interface{}, debug bool) error {
 	req, err := fileUploadReq(SLACK_API+path, filepath, values)
-	resp, err := HTTPClient.Do(req)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func postWithMultipartResponse(path string, filepath string, values url.Values, 
 }
 
 func postForm(endpoint string, values url.Values, intf interface{}, debug bool) error {
-	resp, err := HTTPClient.PostForm(endpoint, values)
+	resp, err := http.PostForm(endpoint, values)
 	if err != nil {
 		return err
 	}

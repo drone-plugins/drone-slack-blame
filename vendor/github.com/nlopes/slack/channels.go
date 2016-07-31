@@ -97,13 +97,6 @@ func (api *Client) GetChannelHistory(channel string, params HistoryParameters) (
 			values.Add("inclusive", "0")
 		}
 	}
-	if params.Unreads != DEFAULT_HISTORY_UNREADS {
-		if params.Unreads {
-			values.Add("unreads", "1")
-		} else {
-			values.Add("unreads", "0")
-		}
-	}
 	response, err := channelRequest("channels.history", values, api.debug)
 	if err != nil {
 		return nil, err
