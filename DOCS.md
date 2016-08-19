@@ -80,8 +80,9 @@ The following values are available.
 The following is a simple Slack Blame configuration in your .drone.yml file:
 
 ```yaml
-notify:
+pipeline:
   slack_blame:
+    image: plugins/slack-blame
     channel: dev
     success_template: |
       The build is fixed! Thanks @{{slack.name}}
