@@ -86,7 +86,7 @@ func (rtm *RTM) connect(connectionCount int) (*Info, *websocket.Conn, error) {
 			return info, conn, nil
 		}
 		// check for fatal errors - currently only invalid_auth
-		if sErr, ok := err.(*WebError); ok && (sErr.Error() == "invalid_auth" || sErr.Error() == "account_inactive") {
+		if sErr, ok := err.(*WebError); ok && sErr.Error() == "invalid_auth" {
 			rtm.IncomingEvents <- RTMEvent{"invalid_auth", &InvalidAuthEvent{}}
 			return nil, nil, sErr
 		}
@@ -361,9 +361,6 @@ var eventMapping = map[string]interface{}{
 	"channel_unarchive":       ChannelUnarchiveEvent{},
 	"channel_history_changed": ChannelHistoryChangedEvent{},
 
-	"dnd_updated":      DNDUpdatedEvent{},
-	"dnd_updated_user": DNDUpdatedEvent{},
-
 	"im_created":         IMCreatedEvent{},
 	"im_open":            IMOpenEvent{},
 	"im_close":           IMCloseEvent{},
@@ -422,6 +419,4 @@ var eventMapping = map[string]interface{}{
 	"bot_changed": BotChangedEvent{},
 
 	"accounts_changed": AccountsChangedEvent{},
-
-	"reconnect_url": ReconnectUrlEvent{},
 }
