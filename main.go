@@ -1,159 +1,177 @@
 package main
 
 import (
-	"fmt"
-	"math/rand"
 	"os"
-	"strings"
-	"time"
 
-	"github.com/drone/drone-plugin-go/plugin"
-	"github.com/nlopes/slack"
+	log "github.com/Sirupsen/logrus"
+	"github.com/urfave/cli"
+	_ "github.com/joho/godotenv/autoload"
 )
 
-type Slack struct {
-	Token   string         `json:"token"`
-	Channel string         `json:"channel"`
-	Success MessageOptions `json:"success"`
-	Failure MessageOptions `json:"failure"`
-}
-
-type MessageOptions struct {
-	Icon             string   `json:"icon"`
-	Username         string   `json:"username"`
-	Message          string   `json:"message"`
-	ImageAttachments []string `json:"image_attachments"`
-}
-
-var (
-	buildCommit string
-)
+var version string // build number set at compile-time
 
 func main() {
-	fmt.Printf("Drone Slack Blame Plugin built from %s\n", buildCommit)
+	app := cli.NewApp()
+	app.Name = "slack-blame"
+	app.Usage = "slack-blame plugin"
+	app.Action = run
+	app.Version = version
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "token",
+			Usage:  "slack access token",
+			EnvVar: "PLUGIN_TOKEN,SLACK_TOKEN",
+		},
+		cli.StringFlag{
+			Name:   "channel",
+			Usage:  "slack channel",
+			EnvVar: "PLUGIN_CHANNEL",
+		},
+		cli.StringFlag{
+			Name:   "mapping",
+			Usage:  "mapping of authors to slack users",
+			EnvVar: "PLUGIN_MAPPING",
+		},
+		cli.StringFlag{
+			Name:   "success_username",
+			Usage:  "username for successful builds",
+			Value:  "drone",
+			EnvVar: "PLUGIN_SUCCESS_USERNAME",
+		},
+		cli.StringFlag{
+			Name:   "success_icon",
+			Usage:  "icon for successful builds",
+			Value:  ":drone:",
+			EnvVar: "PLUGIN_SUCCESS_ICON",
+		},
+		cli.StringFlag{
+			Name:   "success_template",
+			Usage:  "template for successful builds",
+			EnvVar: "PLUGIN_SUCCESS_TEMPLATE",
+		},
+		cli.StringSliceFlag{
+			Name:   "success_image_attachments",
+			Usage:  "image attachments for successful builds",
+			EnvVar: "PLUGIN_SUCCESS_IMAGE_ATTACHMENTS",
+		},
+		cli.StringFlag{
+			Name:   "failure_username",
+			Usage:  "username for failed builds",
+			Value:  "drone",
+			EnvVar: "PLUGIN_FAILURE_USERNAME",
+		},
+		cli.StringFlag{
+			Name:   "failure_icon",
+			Usage:  "icon for failed builds",
+			Value:  ":drone:",
+			EnvVar: "PLUGIN_FAILURE_ICON",
+		},
+		cli.StringFlag{
+			Name:   "failure_template",
+			Usage:  "template for failed builds",
+			EnvVar: "PLUGIN_FAILURE_TEMPLATE",
+		},
+		cli.StringSliceFlag{
+			Name:   "failure_image_attachments",
+			Usage:  "image attachments for failed builds",
+			EnvVar: "PLUGIN_FAILURE_IMAGE_ATTACHMENTS",
+		},
+		cli.StringFlag{
+			Name:   "repo.owner",
+			Usage:  "repository owner",
+			EnvVar: "DRONE_REPO_OWNER",
+		},
+		cli.StringFlag{
+			Name:   "repo.name",
+			Usage:  "repository name",
+			EnvVar: "DRONE_REPO_NAME",
+		},
+		cli.StringFlag{
+			Name:   "commit.sha",
+			Usage:  "git commit sha",
+			EnvVar: "DRONE_COMMIT_SHA",
+		},
+		cli.StringFlag{
+			Name:   "commit.branch",
+			Value:  "master",
+			Usage:  "git commit branch",
+			EnvVar: "DRONE_COMMIT_BRANCH",
+		},
+		cli.StringFlag{
+			Name:   "commit.author.name",
+			Usage:  "git author name",
+			EnvVar: "DRONE_COMMIT_AUTHOR",
+		},
+		cli.StringFlag{
+			Name:   "commit.author.email",
+			Usage:  "git author email",
+			EnvVar: "DRONE_COMMIT_AUTHOR_EMAIL",
+		},
+		cli.StringFlag{
+			Name:   "build.event",
+			Value:  "push",
+			Usage:  "build event",
+			EnvVar: "DRONE_BUILD_EVENT",
+		},
+		cli.IntFlag{
+			Name:   "build.number",
+			Usage:  "build number",
+			EnvVar: "DRONE_BUILD_NUMBER",
+		},
+		cli.StringFlag{
+			Name:   "build.status",
+			Usage:  "build status",
+			Value:  "success",
+			EnvVar: "DRONE_BUILD_STATUS",
+		},
+		cli.StringFlag{
+			Name:   "build.link",
+			Usage:  "build link",
+			EnvVar: "DRONE_BUILD_LINK",
+		},
+	}
+	app.Run(os.Args)
+}
 
-	repo := plugin.Repo{}
-	build := plugin.Build{}
-	system := plugin.System{}
-	vargs := Slack{}
+func run(c *cli.Context) error {
+	plugin := Plugin{
+		Repo: Repo{
+			Owner: c.String("repo.owner"),
+			Name:  c.String("repo.name"),
+		},
+		Build: Build{
+			Number: c.Int("build.number"),
+			Event:  c.String("build.event"),
+			Status: c.String("build.status"),
+			Commit: c.String("commit.sha"),
+			Branch: c.String("commit.branch"),
+			Author: c.String("commit.author.name"),
+			Email:  c.String("commit.author.email"),
+			Link:   c.String("build.link"),
+		},
+		Config: Config{
+			Token:   c.String("token"),
+			Channel: c.String("channel"),
+			Mapping: c.String("mapping"),
+			Success: MessageOptions{
+				Username:         c.String("success_username"),
+				Icon:             c.String("success_icon"),
+				Template:         c.String("success_template"),
+				ImageAttachments: c.StringSlice("success_image_attachments"),
+			},
+			Failure: MessageOptions{
+				Username:         c.String("failure_username"),
+				Icon:             c.String("failure_icon"),
+				Template:         c.String("failure_template"),
+				ImageAttachments: c.StringSlice("failure_image_attachments"),
+			},
+		},
+	}
 
-	plugin.Param("build", &build)
-	plugin.Param("system", &system)
-	plugin.Param("repo", &repo)
-	plugin.Param("vargs", &vargs)
-
-	// parse the parameters
-	if err := plugin.Parse(); err != nil {
-		fmt.Println(err.Error())
+	if err := plugin.Exec(); err != nil {
+		log.Error(err)
 		os.Exit(1)
 	}
 
-	// setup the message
-	buildLink := fmt.Sprintf("%s/%s/%d", system.Link, repo.FullName, build.Number)
-	var messageOptions MessageOptions
-	var color string
-	var messageText string
-	var channelText string
-
-	// Determine if the build was a success
-	if build.Status == "success" {
-		messageOptions = vargs.Success
-		color = "good"
-		messageText = fmt.Sprintf("Build succeeded at %s", buildLink)
-		channelText = "Thanks"
-	} else {
-		messageOptions = vargs.Failure
-		color = "danger"
-		messageText = fmt.Sprintf("Build failed at %s", buildLink)
-		channelText = "Blame"
-	}
-
-	// set default values
-	if len(messageOptions.Username) == 0 {
-		messageOptions.Username = "drone"
-	}
-
-	if len(messageOptions.Icon) == 0 {
-		messageOptions.Icon = ":drone:"
-	}
-
-	if len(messageOptions.ImageAttachments) == 0 {
-		messageOptions.ImageAttachments = []string{""}
-	}
-
-	// setup the message
-	messageParams := slack.PostMessageParameters{
-		Username:  messageOptions.Username,
-		IconEmoji: messageOptions.Icon,
-	}
-
-	imageCount := len(messageOptions.ImageAttachments)
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	attachment := slack.Attachment{
-		Color:    color,
-		Text:     messageText,
-		ImageURL: messageOptions.ImageAttachments[rand.Intn(imageCount)],
-	}
-
-	messageParams.Attachments = []slack.Attachment{attachment}
-
-	// get the commit author
-	commitAuthor := build.Email
-
-	// create the slack api
-	api := slack.New(vargs.Token)
-
-	// get the users
-	//
-	// Slack doesn't let you search by email so just need to get
-	// everything and find the user in question
-	var blameUser *slack.User
-
-	users, _ := api.GetUsers()
-
-	for _, user := range users {
-		if user.Profile.Email == commitAuthor {
-			fmt.Printf("%s\n", user.Name)
-			fmt.Printf("%s\n", user.Profile.Email)
-			blameUser = &user
-			break
-		}
-	}
-
-	// notify the user if possible
-	var userAt string
-
-	if blameUser != nil {
-		userAt = fmt.Sprintf("@%s", blameUser.Name)
-
-		// send the message to the user's channel
-		//
-		// this will appear through slackbot
-		_, _, err := api.PostMessage(userAt, messageOptions.Message, messageParams)
-
-		if err == nil {
-			fmt.Printf("User %s notified\n", userAt)
-		} else {
-			fmt.Printf("Could not notify user %s!\n", userAt)
-		}
-	} else {
-		userAt = build.Author
-		fmt.Print("User could not be found")
-	}
-
-	// notify the channel if requested
-	if len(vargs.Channel) != 0 {
-		if !strings.HasPrefix(vargs.Channel, "#") {
-			vargs.Channel = "#" + vargs.Channel
-		}
-
-		_, _, err := api.PostMessage(vargs.Channel, fmt.Sprintf("%s %s %s", messageOptions.Message, channelText, userAt), messageParams)
-
-		if err == nil {
-			fmt.Printf("Channel notified\n")
-		} else {
-			fmt.Printf("Could not notify channel!\n")
-		}
-	}
+	return nil
 }

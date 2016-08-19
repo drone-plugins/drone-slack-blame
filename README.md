@@ -1,133 +1,57 @@
 # drone-slack-blame
 
 [![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-slack-blame/status.svg)](http://beta.drone.io/drone-plugins/drone-slack-blame)
-[![Coverage Status](https://aircover.co/badges/drone-plugins/drone-slack-blame/coverage.svg)](https://aircover.co/drone-plugins/drone-slack-blame)
-[![](https://badge.imagelayers.io/plugins/drone-slack-blame:latest.svg)](https://imagelayers.io/?images=plugins/drone-slack-blame:latest 'Get your own badge on imagelayers.io')
+[![Go Doc](https://godoc.org/github.com/drone-plugins/drone-slack-blame?status.svg)](http://godoc.org/github.com/drone-plugins/drone-slack-blame)
+[![Go Report](https://goreportcard.com/badge/github.com/drone-plugins/drone-slack-blame)](https://goreportcard.com/report/github.com/drone-plugins/drone-slack-blame)
+[![Join the chat at https://gitter.im/drone/drone](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/drone/drone)
 
-Drone plugin to send build status blames via Slack. For the usage information and a listing of the available options please take a look at [the docs](DOCS.md).
+Drone plugin to send build status blames via Slack. For the usage information
+and a listing of the available options please take a look at
+[the docs](DOCS.md).
 
-## Binary
+## Build
 
-Build the binary using `make`:
+Build the binary with the following commands:
 
 ```
-make deps build
-```
-
-### Example
-
-```sh
-./drone-slack-blame <<EOF
-{
-    "repo": {
-        "clone_url": "git://github.com/drone/drone",
-        "owner": "drone",
-        "name": "drone",
-        "full_name": "drone/drone"
-    },
-    "system": {
-        "link_url": "https://beta.drone.io"
-    },
-    "build": {
-        "number": 22,
-        "status": "success",
-        "started_at": 1421029603,
-        "finished_at": 1421029813,
-        "message": "Update the Readme",
-        "author": "johnsmith",
-        "author_email": "john.smith@gmail.com"
-        "event": "push",
-        "branch": "master",
-        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
-        "ref": "refs/heads/master"
-    },
-    "workspace": {
-        "root": "/drone/src",
-        "path": "/drone/src/github.com/drone/drone"
-    },
-    "vargs": {
-        "token": "xxxxxx",
-        "channel": "dev",
-        "success": {
-            "username": "Happy Keanu (on behalf of Drone)",
-            "icon": ":happy_keanu:",
-            "message": "The build is fixed!",
-            "image_attachments": [
-                "http://i.imgur.com/TP4PIxc.jpg"
-            ]
-        },
-        "failure": {
-            "username": "Sad Keanu (on behalf of Drone)",
-            "icon": ":sad_keanu:",
-            "message": "The build is broken!",
-            "image_attachments": [
-                "http://cdn.meme.am/instances/51000361.jpg"
-            ]
-        }
-    }
-}
-EOF
+go build
+go test
 ```
 
 ## Docker
 
-Build the container using `make`:
+Build the docker image with the following commands:
 
 ```
-make deps docker
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo
+docker build --rm=true -t plugins/slack-blame .
 ```
 
-### Example
+Please note incorrectly building the image for the correct x64 linux and with
+GCO disabled will result in an error when running the Docker image:
+
+```
+docker: Error response from daemon: Container command
+'/bin/drone-slack-blame' not found or does not exist..
+```
+
+## Usage
+
+Execute from the working directory:
 
 ```sh
-docker run -i plugins/drone-slack-blame <<EOF
-{
-    "repo": {
-        "clone_url": "git://github.com/drone/drone",
-        "owner": "drone",
-        "name": "drone",
-        "full_name": "drone/drone"
-    },
-    "system": {
-        "link_url": "https://beta.drone.io"
-    },
-    "build": {
-        "number": 22,
-        "status": "success",
-        "started_at": 1421029603,
-        "finished_at": 1421029813,
-        "message": "Update the Readme",
-        "author": "johnsmith",
-        "author_email": "john.smith@gmail.com"
-        "event": "push",
-        "branch": "master",
-        "commit": "436b7a6e2abaddfd35740527353e78a227ddcb2c",
-        "ref": "refs/heads/master"
-    },
-    "workspace": {
-        "root": "/drone/src",
-        "path": "/drone/src/github.com/drone/drone"
-    },
-    "vargs": {
-        "token": "xxxxxx",
-        "channel": "dev",
-        "success": {
-            "username": "Happy Keanu (on behalf of Drone)",
-            "icon": ":happy_keanu:",
-            "message": "The build is fixed!",
-            "image_attachments": [
-                "http://i.imgur.com/TP4PIxc.jpg"
-            ]
-        },
-        "failure": {
-            "username": "Sad Keanu (on behalf of Drone)",
-            "icon": ":sad_keanu:",
-            "message": "The build is broken!",
-            "image_attachments": [
-                "http://cdn.meme.am/instances/51000361.jpg"
-            ]
-        }
-    }
-}
-EOF
+docker run --rm \
+  -e PLUGIN_TOKEN=xxxxx \
+  -e PLUGIN_CHANNEL=dev \
+  -e PLUGIN_SUCCESS_USERNAME="Happy Keanu (on behalf of Drone)" \
+  -e PLUGIN_SUCCESS_ICON=":happy_keanu:" \
+  -e PLUGIN_SUCCESS_MESSAGE="The build is fixed!" \
+  -e PLUGIN_SUCCESS_IMAGE_ATTACHMENTS="http://i.imgur.com/TP4PIxc.jpg" \
+  -e PLUGIN_FAILURE_USERNAME="Sad Keanu (on behalf of Drone)" \
+  -e PLUGIN_FAILURE_ICON=":sad_keanu:" \
+  -e PLUGIN_FAILURE_MESSAGE="The build is broken!" \
+  -e PLUGIN_FAILURE_IMAGE_ATTACHMENTS="http://cdn.meme.am/instances/51000361.jpg" \
+  -v $(pwd)/$(pwd) \
+  -w $(pwd) \
+  plugins/slack-blame
 ```
