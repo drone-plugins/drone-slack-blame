@@ -45,7 +45,7 @@ It is highly recommended to put the **SLACK_TOKEN** into a secret so it is not
 exposed to users. This can be done using the drone-cli.
 
 ```bash
-drone secret add --image=slack-blame \
+drone secret add --image=plugins/slack-blame \
     octocat/hello-world SLACK_TOKEN xxxxxxx
 ```
 
@@ -80,8 +80,9 @@ The following values are available.
 The following is a simple Slack Blame configuration in your .drone.yml file:
 
 ```yaml
-notify:
+pipeline:
   slack_blame:
+    image: plugins/slack-blame
     channel: dev
     success_template: |
       The build is fixed! Thanks @{{slack.name}}
