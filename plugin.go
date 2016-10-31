@@ -20,20 +20,26 @@ import (
 type (
 	// Repo information.
 	Repo struct {
-		Owner string
-		Name  string
+		FullName string
+		Owner    string
+		Name     string
+		Link     string
 	}
 
 	// Build information.
 	Build struct {
-		Event  string
-		Number int
-		Commit string
-		Branch string
-		Author string
-		Email  string
-		Status string
-		Link   string
+		Commit    string
+		Branch    string
+		Ref       string
+		Link      string
+		Message   string
+		Author    string
+		Email     string
+		Number    int
+		Status    string
+		Event     string
+		Deploy    string
+		BuildLink string
 	}
 
 	// Config for the plugin.
@@ -55,16 +61,18 @@ type (
 
 	// Plugin values
 	Plugin struct {
-		Repo   Repo
-		Build  Build
-		Config Config
+		Repo      Repo
+		Build     Build
+		BuildLast Build
+		Config    Config
 	}
 
 	// templatePayload contains values passed to the template
 	templatePayload struct {
-		Repo  Repo
-		Build Build
-		User  *slack.User
+		Repo      Repo
+		Build     Build
+		BuildLast Build
+		User      *slack.User
 	}
 
 	// searchFunc determines how to search for a slack user.
@@ -277,9 +285,10 @@ func createMessage(p Plugin, user *slack.User) slack.PostMessageParameters {
 
 	// setup the payload
 	payload := templatePayload{
-		Build: p.Build,
-		Repo:  p.Repo,
-		User:  user,
+		Build:     p.Build,
+		Repo:      p.Repo,
+		BuildLast: p.BuildLast,
+		User:      user,
 	}
 
 	messageText, err := template.Render(messageOptions.Template, &payload)

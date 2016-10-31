@@ -78,6 +78,18 @@ func main() {
 			EnvVar: "PLUGIN_FAILURE_IMAGE_ATTACHMENTS",
 		},
 		cli.StringFlag{
+			Name:  "env-file",
+			Usage: "source env file",
+		},
+
+		// Template parameters
+
+		cli.StringFlag{
+			Name:   "repo.fullname",
+			Usage:  "repository full name",
+			EnvVar: "DRONE_REPO",
+		},
+		cli.StringFlag{
 			Name:   "repo.owner",
 			Usage:  "repository owner",
 			EnvVar: "DRONE_REPO_OWNER",
@@ -88,15 +100,36 @@ func main() {
 			EnvVar: "DRONE_REPO_NAME",
 		},
 		cli.StringFlag{
+			Name:   "repo.link",
+			Usage:  "repository link",
+			EnvVar: "DRONE_REPO_LINK",
+		},
+		cli.StringFlag{
 			Name:   "commit.sha",
 			Usage:  "git commit sha",
 			EnvVar: "DRONE_COMMIT_SHA",
+		},
+		cli.StringFlag{
+			Name:   "commit.ref",
+			Value:  "refs/heads/master",
+			Usage:  "git commit ref",
+			EnvVar: "DRONE_COMMIT_REF",
 		},
 		cli.StringFlag{
 			Name:   "commit.branch",
 			Value:  "master",
 			Usage:  "git commit branch",
 			EnvVar: "DRONE_COMMIT_BRANCH",
+		},
+		cli.StringFlag{
+			Name:   "commit.message",
+			Usage:  "git commit message",
+			EnvVar: "DRONE_COMMIT_MESSAGE",
+		},
+		cli.StringFlag{
+			Name:   "commit.link",
+			Usage:  "git commit link",
+			EnvVar: "DRONE_COMMIT_LINK",
 		},
 		cli.StringFlag{
 			Name:   "commit.author.name",
@@ -131,8 +164,24 @@ func main() {
 			EnvVar: "DRONE_BUILD_LINK",
 		},
 		cli.StringFlag{
-			Name:  "env-file",
-			Usage: "source env file",
+			Name:   "build.deploy",
+			Usage:  "build deployment target",
+			EnvVar: "DRONE_DEPLOY_TO",
+		},
+		cli.IntFlag{
+			Name:   "prev.build.number",
+			Usage:  "previous build number",
+			EnvVar: "DRONE_PREV_BUILD_NUMBER",
+		},
+		cli.StringFlag{
+			Name:   "prev.build.status",
+			Usage:  "previous build status",
+			EnvVar: "DRONE_PREV_BUILD_STATUS",
+		},
+		cli.StringFlag{
+			Name:   "prev.commit.sha",
+			Usage:  "previous build sha",
+			EnvVar: "DRONE_PREV_COMMIT_SHA",
 		},
 	}
 
@@ -148,18 +197,29 @@ func run(c *cli.Context) error {
 
 	plugin := Plugin{
 		Repo: Repo{
-			Owner: c.String("repo.owner"),
-			Name:  c.String("repo.name"),
+			FullName: c.String("repo.fullname"),
+			Owner:    c.String("repo.owner"),
+			Name:     c.String("repo.name"),
+			Link:     c.String("repo.link"),
 		},
 		Build: Build{
-			Number: c.Int("build.number"),
-			Event:  c.String("build.event"),
-			Status: c.String("build.status"),
-			Commit: c.String("commit.sha"),
-			Branch: c.String("commit.branch"),
-			Author: c.String("commit.author.name"),
-			Email:  c.String("commit.author.email"),
-			Link:   c.String("build.link"),
+			Commit:    c.String("commit.sha"),
+			Branch:    c.String("commit.branch"),
+			Ref:       c.String("commit.ref"),
+			Link:      c.String("commit.link"),
+			Message:   c.String("commit.message"),
+			Author:    c.String("commit.author.name"),
+			Email:     c.String("commit.author.email"),
+			Number:    c.Int("build.number"),
+			Status:    c.String("build.status"),
+			Event:     c.String("build.event"),
+			Deploy:    c.String("build.deploy"),
+			BuildLink: c.String("build.link"),
+		},
+		BuildLast: Build{
+			Number: c.Int("prev.build.number"),
+			Status: c.String("prev.build.status"),
+			Commit: c.String("prev.commit.sha"),
 		},
 		Config: Config{
 			Token:   c.String("token"),
