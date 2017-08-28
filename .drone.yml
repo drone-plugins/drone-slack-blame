@@ -1,30 +1,96 @@
 workspace:
   base: /go
+  path: src/github.com/drone-plugins/drone-slack-blame
 
 pipeline:
   test:
-    image: golang:1.6
-    environment:
-      - CGO_ENABLED=0
+    image: golang:1.9
     commands:
       - go vet
       - go test -cover -coverprofile=coverage.out
-      - go build -ldflags "-s -w -X main.build=$DRONE_BUILD_NUMBER" -a -tags netgo
 
-  latest:
+  build_linux_amd64:
+    image: golang:1.9
+    group: build
+    environment:
+      - GOOS=linux
+      - GOARCH=amd64
+      - CGO_ENABLED=0
+    commands:
+      - go build -v -ldflags "-X main.build=${DRONE_BUILD_NUMBER}" -a -tags netgo -o release/linux/amd64/drone-slack-blame
+
+  build_linux_arm64:
+    image: golang:1.9
+    group: build
+    environment:
+      - GOOS=linux
+      - GOARCH=arm64
+      - CGO_ENABLED=0
+    commands:
+      - go build -v -ldflags "-X main.build=${DRONE_BUILD_NUMBER}" -a -tags netgo -o release/linux/arm64/drone-slack-blame
+
+  build_linux_arm:
+    image: golang:1.9
+    group: build
+    environment:
+      - GOOS=linux
+      - GOARCH=arm
+      - CGO_ENABLED=0
+      - GOARM=7
+    commands:
+      - go build -v -ldflags "-X main.build=${DRONE_BUILD_NUMBER}" -a -tags netgo -o release/linux/arm/drone-slack-blame
+
+  # build_windows_amd64:
+  #   image: golang:1.9-nanoserver
+  #   group: build
+  #   environment:
+  #     - GOOS=windows
+  #     - GOARCH=amd64
+  #     - CGO_ENABLED=0
+  #   commands:
+  #     - go build -v -ldflags "-X main.build=${DRONE_BUILD_NUMBER}" -a -tags netgo -o release/windows/amd64/drone-slack-blame
+
+  publish_linux_amd64:
     image: plugins/docker
     repo: plugins/slack-blame
-    tags: [ "latest", "1.0", "1" ]
+    tags: [ latest, 1.0.0, 1.0, 1 ]
+    secrets: [ docker_username, docker_password ]
     when:
       branch: master
       event: push
 
-plugin:
-  name: Slack Blame
-  desc: Send build status blame messages via Slack
-  type: notify
-  image: plugins/drone-slack
-  labels:
-    - chat
-    - messaging
+  publish_linux_arm64:
+    image: plugins/docker
+    repo: plugins/slack-blame
+    tags: [ linux-arm64 ]
+    secrets: [ docker_username, docker_password ]
+    dockerfile: Dockerfile.arm64
+    when:
+      branch: master
+      event: push
 
+  publish_linux_arm:
+    image: plugins/docker
+    repo: plugins/slack-blame
+    tags: [ linux-arm ]
+    secrets: [ docker_username, docker_password ]
+    dockerfile: Dockerfile.arm
+    when:
+      branch: master
+      event: push
+
+  # publish_windows_amd64:
+  #   image: plugins/docker
+  #   repo: plugins/slack-blame
+  #   tags: [ windows-amd64 ]
+  #   secrets: [ docker_username, docker_password ]
+  #   dockerfile: Dockerfile.windows
+  #   when:
+  #     branch: master
+  #     event: push
+
+  # microbadger:
+  #   image: plugins/webhook
+  #   secrets: [ webhook_url ]
+  #   when:
+  #     status: [ success ]
