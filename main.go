@@ -5,18 +5,20 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/joho/godotenv"
 	"github.com/urfave/cli"
+	"github.com/pkg/errors"
 )
-
-var build = "0" // build number set at compile-time
+var (
+	version = "0.0.0"
+	build   = "0"
+)
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "slack blame plugin"
 	app.Usage = "slack blame plugin"
 	app.Action = run
-	app.Version = fmt.Sprintf("1.0.0+%s", build)
+	app.Version = fmt.Sprintf("%s+%s", version, build)
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "token",
@@ -77,13 +79,6 @@ func main() {
 			Usage:  "image attachments for failed builds",
 			EnvVar: "PLUGIN_FAILURE_IMAGE_ATTACHMENTS",
 		},
-		cli.StringFlag{
-			Name:  "env-file",
-			Usage: "source env file",
-		},
-
-		// Template parameters
-
 		cli.StringFlag{
 			Name:   "repo.fullname",
 			Usage:  "repository full name",
@@ -191,10 +186,6 @@ func main() {
 }
 
 func run(c *cli.Context) error {
-	if c.String("env-file") != "" {
-		_ = godotenv.Load(c.String("env-file"))
-	}
-
 	plugin := Plugin{
 		Repo: Repo{
 			FullName: c.String("repo.fullname"),
@@ -238,6 +229,10 @@ func run(c *cli.Context) error {
 				ImageAttachments: c.StringSlice("failure_image_attachments"),
 			},
 		},
+	}
+
+	if plugin.Config.Token == "" {
+		return errors.New("Missing authentication token")
 	}
 
 	return plugin.Exec()
