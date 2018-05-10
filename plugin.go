@@ -210,7 +210,13 @@ func (p Plugin) findSlackUser(api *slack.Client) (*slack.User, error) {
 	if val, ok := mapping[p.Build.Email]; ok {
 		logrus.WithFields(logrus.Fields{
 			"username": val,
-		}).Info("Searching for user by name")
+		}).Info("Searching for user by name, using build.email as key")
+		search = checkUsername
+		find = val
+	} else if val, ok := mapping[p.Build.Author]; ok {
+		logrus.WithFields(logrus.Fields{
+			"username": val,
+		}).Info("Searching for user by name, using build.author as key")
 		search = checkUsername
 		find = val
 	} else {
