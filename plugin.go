@@ -178,7 +178,7 @@ func (p Plugin) createMessage() slack.PostMessageParameters {
 		Color:     color,
 		Text:      messageText,
 		Title:     messageTitle,
-		TitleLink: p.Build.Link,
+		TitleLink: p.Build.BuildLink,
 	}
 
 	// Add image if any are provided
