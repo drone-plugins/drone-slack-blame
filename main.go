@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/urfave/cli"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
+
 var (
 	version = "0.0.0"
 	build   = "0"

@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone-template-lib/template"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type (
