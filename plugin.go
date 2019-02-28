@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone-template-lib/template"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type (
@@ -303,7 +303,7 @@ func contents(s string) string {
 
 // checkEmail sees if the email is used by the user.
 func checkEmail(user *slack.User, email string) bool {
-	return user.Profile.Email == email
+	return strings.EqualFold(user.Profile.Email, email)
 }
 
 // checkUsername sees if the username is the same as the user.
