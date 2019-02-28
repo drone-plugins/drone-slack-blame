@@ -308,5 +308,5 @@ func checkEmail(user *slack.User, email string) bool {
 
 // checkUsername sees if the username is the same as the user.
 func checkUsername(user *slack.User, name string) bool {
-	return user.Name == name
+	return user.Profile.DisplayName == name
 }
