@@ -93,13 +93,13 @@ func (p Plugin) Exec() error {
 	p.User, _ = p.findSlackUser(api)
 
 	// get the associated @ string
-	messageParams := p.createMessage()
+	messageOptions := p.createMessage()
 	var userAt string
 
 	if p.User != nil {
 		userAt = fmt.Sprintf("@%s", p.User.Name)
 
-		_, _, err := api.PostMessage(userAt, "", messageParams)
+		_, _, err := api.PostMessage(userAt, messageOptions)
 
 		if err == nil {
 			logrus.WithFields(logrus.Fields{
@@ -121,7 +121,7 @@ func (p Plugin) Exec() error {
 		if !strings.HasPrefix(p.Config.Channel, "#") {
 			p.Config.Channel = "#" + p.Config.Channel
 		}
-		_, _, err := api.PostMessage(p.Config.Channel, "", messageParams)
+		_, _, err := api.PostMessage(p.Config.Channel, messageOptions)
 
 		if err == nil {
 			logrus.WithFields(logrus.Fields{
@@ -138,7 +138,8 @@ func (p Plugin) Exec() error {
 }
 
 // createMessage generates the message to post to Slack.
-func (p Plugin) createMessage() slack.PostMessageParameters {
+func (p Plugin) createMessage() slack.MsgOption {
+	// This is currently deprecated
 	var messageOptions MessageOptions
 	var color string
 	var messageTitle string
@@ -192,9 +193,10 @@ func (p Plugin) createMessage() slack.PostMessageParameters {
 		attachment.ImageURL = messageOptions.ImageAttachments[rand.Intn(imageCount)]
 	}
 
-	messageParams.Attachments = []slack.Attachment{attachment}
-
-	return messageParams
+	return slack.MsgOptionCompose(
+		slack.MsgOptionPostMessageParameters(messageParams),
+		slack.MsgOptionAttachments(attachment),
+	)
 }
 
 // findSlackUser uses the slack API to find the user who made the commit that
