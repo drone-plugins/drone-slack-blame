@@ -96,7 +96,8 @@ def linux(arch):
         'image': 'golang:1.13',
         'pull': 'always',
         'environment': {
-          'CGO_ENABLED': '0'
+          'CGO_ENABLED': '0',
+          'GO111MODULE': 'on',
         },
         'commands': [
           'go version',
