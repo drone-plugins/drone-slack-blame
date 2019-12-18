@@ -7,8 +7,10 @@ def main(ctx):
     linux('amd64'),
     linux('arm64'),
     linux('arm'),
+
     windows('1903'),
     windows('1809'),
+
   ]
 
   after = manifest() + gitter()
@@ -35,7 +37,7 @@ def testing():
     'steps': [
       {
         'name': 'vet',
-        'image': 'golang:1.12',
+        'image': 'golang:1.13',
         'pull': 'always',
         'commands': [
           'go version',
@@ -50,7 +52,7 @@ def testing():
       },
       {
         'name': 'test',
-        'image': 'golang:1.12',
+        'image': 'golang:1.13',
         'pull': 'always',
         'commands': [
           'go version',
@@ -91,7 +93,7 @@ def linux(arch):
     'steps': [
       {
         'name': 'build-push',
-        'image': 'golang:1.12',
+        'image': 'golang:1.13',
         'pull': 'always',
         'environment': {
           'CGO_ENABLED': '0'
@@ -110,7 +112,7 @@ def linux(arch):
       },
       {
         'name': 'build-tag',
-        'image': 'golang:1.12',
+        'image': 'golang:1.13',
         'pull': 'always',
         'environment': {
           'CGO_ENABLED': '0'
@@ -127,7 +129,7 @@ def linux(arch):
       },
       {
         'name': 'executable',
-        'image': 'golang:1.12',
+        'image': 'golang:1.13',
         'pull': 'always',
         'commands': [
           './release/linux/%s/drone-slack-blame --help' % arch

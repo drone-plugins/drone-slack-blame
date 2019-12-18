@@ -1,6 +1,6 @@
 module github.com/drone-plugins/drone-slack-blame
 
-go 1.12
+go 1.13
 
 require (
 	github.com/drone-plugins/drone-plugin-lib v0.1.0
