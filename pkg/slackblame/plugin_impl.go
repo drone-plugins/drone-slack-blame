@@ -6,11 +6,8 @@
 package slackblame
 
 import (
-	"context"
-
 	"fmt"
 	"math/rand"
-	"net/http"
 	"strings"
 	"text/template"
 	"time"
@@ -48,11 +45,6 @@ type (
 )
 
 func (p *pluginImpl) Validate() error {
-	// REMOVE
-	p.network.Client = http.DefaultClient
-	p.network.Context = context.Background()
-	logrus.SetLevel(logrus.TraceLevel)
-
 	// Check the token
 	if p.settings.Token == "" {
 		return errors.New("slack token not found")
@@ -109,7 +101,10 @@ func (p *pluginImpl) Validate() error {
 
 func (p *pluginImpl) Exec() error {
 	// create the API
-	api := slack.New(p.settings.Token)
+	api := slack.New(
+		p.settings.Token,
+		slack.OptionHTTPClient(p.network.Client),
+	)
 
 	// verify the connection
 	authResponse, err := api.AuthTestContext(p.network.Context)
@@ -127,7 +122,7 @@ func (p *pluginImpl) Exec() error {
 	user, _ := p.findSlackUser(api)
 
 	// get the associated @ string
-	messageOptions := p.createMessage()
+	messageOptions := p.createMessage(user)
 	var userAt string
 
 	if user != nil {
@@ -162,7 +157,7 @@ func (p *pluginImpl) Exec() error {
 }
 
 // createMessage generates the message to post to Slack.
-func (p *pluginImpl) createMessage() slack.MsgOption {
+func (p *pluginImpl) createMessage(user *slack.User) slack.MsgOption {
 	// This is currently deprecated
 	var messageOptions MessageOptions
 	var color string
@@ -192,6 +187,19 @@ func (p *pluginImpl) createMessage() slack.MsgOption {
 		messageParams.IconEmoji = messageOptions.Icon
 	}
 
+	if user != nil {
+		logrus.WithFields(logrus.Fields{
+			"profile.first-name":              user.Profile.FirstName,
+			"profile.last-name":               user.Profile.LastName,
+			"profile.real-name":               user.Profile.RealName,
+			"profile.real-name-normalized":    user.Profile.RealNameNormalized,
+			"profile.display-name":            user.Profile.DisplayName,
+			"profile.display-name-normalized": user.Profile.DisplayNameNormalized,
+		}).Debug("profile information")
+	} else {
+		logrus.Debug("user not found")
+	}
+
 	// Render the template
 	messageText := strings.Builder{}
 	messageValues := struct {
@@ -201,6 +209,7 @@ func (p *pluginImpl) createMessage() slack.MsgOption {
 		Stage  plugin.Stage
 		Step   plugin.Step
 		SemVer plugin.SemVer
+		Slack  slack.UserProfile
 	}{
 		p.pipeline.Build,
 		p.pipeline.Repo,
@@ -208,6 +217,7 @@ func (p *pluginImpl) createMessage() slack.MsgOption {
 		p.pipeline.Stage,
 		p.pipeline.Step,
 		p.pipeline.SemVer,
+		user.Profile,
 	}
 
 	err := messageOptions.template.Execute(&messageText, messageValues)
