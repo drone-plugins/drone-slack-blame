@@ -101,6 +101,7 @@ def linux(arch):
         },
         'commands': [
           'go version',
+          'go env',
           'go build -v -ldflags "-X main.version=${DRONE_COMMIT_SHA:0:8}" -a -tags netgo -o release/linux/%s/drone-slack-blame ./cmd/drone-slack-blame' % arch,
         ],
         'when': {
