@@ -22,6 +22,7 @@ type (
 	MessageOptions struct {
 		Icon             string
 		Username         string
+		SkipUserNotify   bool
 		Template         string
 		ImageAttachments []string
 	}
@@ -95,8 +96,15 @@ func (p Plugin) Exec() error {
 	// get the associated @ string
 	messageOptions := p.createMessage()
 	var userAt string
+	var skipUserNotify bool
 
-	if p.User != nil {
+	if p.Build.Status == "success" {
+		skipUserNotify = p.Config.Success.SkipUserNotify
+	} else {
+		skipUserNotify = p.Config.Failure.SkipUserNotify
+	}
+
+	if p.User != nil && !skipUserNotify {
 		userAt = fmt.Sprintf("@%s", p.User.Name)
 
 		_, _, err := api.PostMessage(userAt, messageOptions)
@@ -110,7 +118,7 @@ func (p Plugin) Exec() error {
 				"username": p.User.Name,
 			}).Error("Could not notify user")
 		}
-	} else {
+	} else if p.User == nil {
 		userAt = p.Build.Author
 		logrus.WithFields(logrus.Fields{
 			"author": userAt,

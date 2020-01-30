@@ -56,6 +56,11 @@ func main() {
 			Usage:  "image attachments for successful builds",
 			EnvVar: "PLUGIN_SUCCESS_IMAGE_ATTACHMENTS",
 		},
+		cli.BoolFlag{
+			Name:   "success_skip_user_notify",
+			Usage:  "skip notifying user for successful builds",
+			EnvVar: "PLUGIN_SUCCESS_SKIP_USER_NOTIFY",
+		},
 		cli.StringFlag{
 			Name:   "failure_username",
 			Usage:  "username for failed builds",
@@ -77,6 +82,11 @@ func main() {
 			Name:   "failure_image_attachments",
 			Usage:  "image attachments for failed builds",
 			EnvVar: "PLUGIN_FAILURE_IMAGE_ATTACHMENTS",
+		},
+		cli.BoolFlag{
+			Name:   "failure_skip_user_notify",
+			Usage:  "skip notifying user for failed builds",
+			EnvVar: "PLUGIN_FAILURE_SKIP_USER_NOTIFY",
 		},
 		cli.StringFlag{
 			Name:   "repo.fullname",
@@ -220,12 +230,14 @@ func run(c *cli.Context) error {
 				Icon:             c.String("success_icon"),
 				Template:         c.String("success_template"),
 				ImageAttachments: c.StringSlice("success_image_attachments"),
+				SkipUserNotify:   c.Bool("success_skip_user_notify"),
 			},
 			Failure: MessageOptions{
 				Username:         c.String("failure_username"),
 				Icon:             c.String("failure_icon"),
 				Template:         c.String("failure_template"),
 				ImageAttachments: c.StringSlice("failure_image_attachments"),
+				SkipUserNotify:   c.Bool("failure_skip_user_notify"),
 			},
 		},
 	}
