@@ -1,31 +1,13 @@
-// Copyright (c) 2019, the Drone Plugins project authors.
+// Copyright (c) 2020, the Drone Plugins project authors.
 // Please see the AUTHORS file for details. All rights reserved.
 // Use of this source code is governed by an Apache 2.0 license that can be
 // found in the LICENSE file.
 
 package main
 
-import (
-	"github.com/urfave/cli/v2"
-
-	"github.com/drone-plugins/drone-slack-blame/pkg/slackblame"
-)
+import "github.com/urfave/cli/v2"
 
 const (
-	tokenFlag   = "token"
-	channelFlag = "channel"
-	mappingFlag = "mapping"
-
-	successUsernameFlag         = "success.username"
-	successIconFlag             = "success.icon"
-	successTemplateFlag         = "success.template"
-	successImageAttachmentsFlag = "success.image-attachments"
-
-	failureUsernameFlag         = "failure.username"
-	failureIconFlag             = "failure.icon"
-	failureTemplateFlag         = "failure.template"
-	failureImageAttachmentsFlag = "failure.image-attachments"
-
 	defaultUsername = "drone"
 	defaultIcon     = ":drone:"
 )
@@ -34,84 +16,74 @@ const (
 func settingsFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:    tokenFlag,
-			Usage:   "slack access token",
-			EnvVars: []string{"PLUGIN_TOKEN,SLACK_TOKEN"},
+			Name:        "token",
+			Usage:       "slack access token",
+			EnvVars:     []string{"PLUGIN_TOKEN,SLACK_TOKEN"},
+			Destination: &settings.Token,
 		},
 		&cli.StringFlag{
-			Name:    channelFlag,
-			Usage:   "slack channel",
-			EnvVars: []string{"PLUGIN_CHANNEL"},
+			Name:        "channel",
+			Usage:       "slack channel",
+			EnvVars:     []string{"PLUGIN_CHANNEL"},
+			Destination: &settings.Channel,
 		},
 		&cli.StringFlag{
-			Name:    mappingFlag,
-			Usage:   "mapping of authors to slack users",
-			EnvVars: []string{"PLUGIN_MAPPING"},
+			Name:        "mapping",
+			Usage:       "mapping of authors to slack users",
+			EnvVars:     []string{"PLUGIN_MAPPING"},
+			Destination: &settings.Mapping,
 		},
 		&cli.StringFlag{
-			Name:    successUsernameFlag,
-			Usage:   "username for successful builds",
-			Value:   defaultUsername,
-			EnvVars: []string{"PLUGIN_SUCCESS_USERNAME"},
+			Name:        "success.username",
+			Usage:       "username for successful builds",
+			Value:       defaultUsername,
+			EnvVars:     []string{"PLUGIN_SUCCESS_USERNAME"},
+			Destination: &settings.Success.Username,
 		},
 		&cli.StringFlag{
-			Name:    successIconFlag,
-			Usage:   "icon for successful builds",
-			Value:   defaultIcon,
-			EnvVars: []string{"PLUGIN_SUCCESS_ICON"},
+			Name:        "success.icon",
+			Usage:       "icon for successful builds",
+			Value:       defaultIcon,
+			EnvVars:     []string{"PLUGIN_SUCCESS_ICON"},
+			Destination: &settings.Success.Icon,
 		},
 		&cli.StringFlag{
-			Name:    successTemplateFlag,
-			Usage:   "template for successful builds",
-			EnvVars: []string{"PLUGIN_SUCCESS_TEMPLATE"},
+			Name:        "success.template",
+			Usage:       "template for successful builds",
+			EnvVars:     []string{"PLUGIN_SUCCESS_TEMPLATE"},
+			Destination: &settings.Success.Template,
 		},
 		&cli.StringSliceFlag{
-			Name:    successImageAttachmentsFlag,
-			Usage:   "image attachments for successful builds",
-			EnvVars: []string{"PLUGIN_SUCCESS_IMAGE_ATTACHMENTS"},
+			Name:        "success.image-attachments",
+			Usage:       "image attachments for successful builds",
+			EnvVars:     []string{"PLUGIN_SUCCESS_IMAGE_ATTACHMENTS"},
+			Destination: &settings.Success.ImageAttachments,
 		},
 		&cli.StringFlag{
-			Name:    failureUsernameFlag,
-			Usage:   "username for failed builds",
-			Value:   defaultUsername,
-			EnvVars: []string{"PLUGIN_FAILURE_USERNAME"},
+			Name:        "failure.username",
+			Usage:       "username for failed builds",
+			Value:       defaultUsername,
+			EnvVars:     []string{"PLUGIN_FAILURE_USERNAME"},
+			Destination: &settings.Failure.Username,
 		},
 		&cli.StringFlag{
-			Name:    failureIconFlag,
-			Usage:   "icon for failed builds",
-			Value:   defaultIcon,
-			EnvVars: []string{"PLUGIN_FAILURE_ICON"},
+			Name:        "failure.icon",
+			Usage:       "icon for failed builds",
+			Value:       defaultIcon,
+			EnvVars:     []string{"PLUGIN_FAILURE_ICON"},
+			Destination: &settings.Failure.Icon,
 		},
 		&cli.StringFlag{
-			Name:    failureTemplateFlag,
-			Usage:   "template for failed builds",
-			EnvVars: []string{"PLUGIN_FAILURE_TEMPLATE"},
+			Name:        "failure.template",
+			Usage:       "template for failed builds",
+			EnvVars:     []string{"PLUGIN_FAILURE_TEMPLATE"},
+			Destination: &settings.Failure.Template,
 		},
 		&cli.StringSliceFlag{
-			Name:    failureImageAttachmentsFlag,
-			Usage:   "image attachments for failed builds",
-			EnvVars: []string{"PLUGIN_FAILURE_IMAGE_ATTACHMENTS"},
-		},
-	}
-}
-
-// settingsFromContext creates a plugin.Settings from the cli.Context.
-func settingsFromContext(ctx *cli.Context) slackblame.Settings {
-	return slackblame.Settings{
-		Token:   ctx.String(tokenFlag),
-		Channel: ctx.String(channelFlag),
-		Mapping: ctx.String(mappingFlag),
-		Success: slackblame.MessageOptions{
-			Username:         ctx.String(successUsernameFlag),
-			Icon:             ctx.String(successIconFlag),
-			Template:         ctx.String(successTemplateFlag),
-			ImageAttachments: ctx.StringSlice(successImageAttachmentsFlag),
-		},
-		Failure: slackblame.MessageOptions{
-			Username:         ctx.String(failureUsernameFlag),
-			Icon:             ctx.String(failureIconFlag),
-			Template:         ctx.String(failureTemplateFlag),
-			ImageAttachments: ctx.StringSlice(failureImageAttachmentsFlag),
+			Name:        "failure.image-attachments",
+			Usage:       "image attachments for failed builds",
+			EnvVars:     []string{"PLUGIN_FAILURE_IMAGE_ATTACHMENTS"},
+			Destination: &settings.Failure.ImageAttachments,
 		},
 	}
 }

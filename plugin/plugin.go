@@ -1,37 +1,37 @@
-// Copyright (c) 2019, the Drone Plugins project authors.
+// Copyright (c) 2020, the Drone Plugins project authors.
 // Please see the AUTHORS file for details. All rights reserved.
 // Use of this source code is governed by an Apache 2.0 license that can be
 // found in the LICENSE file.
 
-package slackblame
+package plugin
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 
-	"github.com/drone-plugins/drone-plugin-lib/pkg/plugin"
-	"github.com/drone-plugins/drone-plugin-lib/pkg/urfave"
-	"github.com/pkg/errors"
+	"github.com/drone-plugins/drone-plugin-lib/drone"
 )
 
-type pluginImpl struct {
+// Plugin implements drone.Plugin to provide the plugin implementation.
+type Plugin struct {
 	settings Settings
-	pipeline plugin.Pipeline
-	network  urfave.Network
+	pipeline drone.Pipeline
+	network  drone.Network
 }
 
-// New Plugin from the given Settings, Pipeline, and Network.
-func New(settings Settings, pipeline plugin.Pipeline, network urfave.Network) plugin.Plugin {
-	return &pluginImpl{
+// New initializes a plugin from the given Settings, Pipeline, and Network.
+func New(settings Settings, pipeline drone.Pipeline, network drone.Network) drone.Plugin {
+	return &Plugin{
 		settings: settings,
 		pipeline: pipeline,
 		network:  network,
 	}
 }
 
-func (p *pluginImpl) contents(str string) (string, error) {
+func (p *Plugin) contents(str string) (string, error) {
 	// Check for the empty string
 	if str == "" {
 		return str, nil
@@ -65,13 +65,14 @@ func (p *pluginImpl) contents(str string) (string, error) {
 	}
 
 	// See if the string is referencing a file
-	if _, err := os.Stat(str); err == nil {
+	_, err := os.Stat(str)
+	if err == nil {
 		b, err := ioutil.ReadFile(str)
 		return string(b), err
 	}
 
 	if isFilePath {
-		return "", errors.Errorf("could not load file %s", str)
+		return "", fmt.Errorf("could not load file %s: %w", str, err)
 	}
 
 	// Its a regular string

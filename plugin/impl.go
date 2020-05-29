@@ -1,9 +1,9 @@
-// Copyright (c) 2019, the Drone Plugins project authors.
+// Copyright (c) 2020, the Drone Plugins project authors.
 // Please see the AUTHORS file for details. All rights reserved.
 // Use of this source code is governed by an Apache 2.0 license that can be
 // found in the LICENSE file.
 
-package slackblame
+package plugin
 
 import (
 	"fmt"
@@ -12,10 +12,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/drone-plugins/drone-plugin-lib/pkg/plugin"
+	"github.com/drone-plugins/drone-plugin-lib/drone"
 	"github.com/nlopes/slack"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
 
 type (
@@ -35,7 +35,7 @@ type (
 		Icon             string
 		Username         string
 		Template         string
-		ImageAttachments []string
+		ImageAttachments cli.StringSlice
 
 		template *template.Template
 	}
@@ -44,21 +44,22 @@ type (
 	searchFunc func(*slack.User, string) bool
 )
 
-func (p *pluginImpl) Validate() error {
+// Validate handles the settings validation of the plugin.
+func (p *Plugin) Validate() error {
 	// Check the token
 	if p.settings.Token == "" {
-		return errors.New("slack token not found")
+		return fmt.Errorf("slack token not found")
 	}
 
 	// Load mapping if requrested
 	m, err := p.contents(p.settings.Mapping)
 	if err != nil {
-		return errors.Wrapf(err, "mapping could not be loaded from %s", p.settings.Mapping)
+		return fmt.Errorf("mapping could not be loaded from %s: %w", p.settings.Mapping, err)
 	}
 	p.settings.mapping, err = userMapping(m)
 	logrus.WithField("user-mapping", m).Debug("user mapping contents")
 	if err != nil {
-		return errors.Wrap(err, "could not load mapping")
+		return fmt.Errorf("could not load mapping: %w", err)
 	}
 
 	// Load template
@@ -66,7 +67,7 @@ func (p *pluginImpl) Validate() error {
 		// Load success template
 		st, err := p.contents(p.settings.Success.Template)
 		if err != nil {
-			return errors.Wrapf(err, "success template could not be loaded from %s", p.settings.Success.Template)
+			return fmt.Errorf("success template could not be loaded from %s: %w", p.settings.Success.Template, err)
 		}
 		if st == "" {
 			st = defaultSuccessTemplate
@@ -76,13 +77,13 @@ func (p *pluginImpl) Validate() error {
 		tmpl := template.New("success-template")
 		p.settings.Success.template, err = tmpl.Parse(st)
 		if err != nil {
-			return errors.Wrap(err, "could not parse success template")
+			return fmt.Errorf("could not parse success template: %w", err)
 		}
 	} else {
 		// Load failure template
 		ft, err := p.contents(p.settings.Failure.Template)
 		if err != nil {
-			return errors.Wrapf(err, "failure template could not be loaded from %s", p.settings.Failure.Template)
+			return fmt.Errorf("failure template could not be loaded from %s: %w", p.settings.Failure.Template, err)
 		}
 		if ft == "" {
 			ft = defaultFailureTemplate
@@ -92,14 +93,15 @@ func (p *pluginImpl) Validate() error {
 		tmpl := template.New("failure-template")
 		p.settings.Failure.template, err = tmpl.Parse(ft)
 		if err != nil {
-			return errors.Wrap(err, "could not parse failure template")
+			return fmt.Errorf("could not parse failure template: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (p *pluginImpl) Exec() error {
+// Execute provides the implementation of the plugin.
+func (p *Plugin) Execute() error {
 	// create the API
 	api := slack.New(
 		p.settings.Token,
@@ -110,7 +112,7 @@ func (p *pluginImpl) Exec() error {
 	authResponse, err := api.AuthTestContext(p.network.Context)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to test auth")
+		return fmt.Errorf("failed to test auth: %w", err)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -157,7 +159,7 @@ func (p *pluginImpl) Exec() error {
 }
 
 // createMessage generates the message to post to Slack.
-func (p *pluginImpl) createMessage(user *slack.User) slack.MsgOption {
+func (p *Plugin) createMessage(user *slack.User) slack.MsgOption {
 	// This is currently deprecated
 	var messageOptions MessageOptions
 	var color string
@@ -203,12 +205,12 @@ func (p *pluginImpl) createMessage(user *slack.User) slack.MsgOption {
 	// Render the template
 	messageText := strings.Builder{}
 	messageValues := struct {
-		Build  plugin.Build
-		Repo   plugin.Repo
-		Commit plugin.Commit
-		Stage  plugin.Stage
-		Step   plugin.Step
-		SemVer plugin.SemVer
+		Build  drone.Build
+		Repo   drone.Repo
+		Commit drone.Commit
+		Stage  drone.Stage
+		Step   drone.Step
+		SemVer drone.SemVer
 		Slack  slack.UserProfile
 	}{
 		p.pipeline.Build,
@@ -238,12 +240,13 @@ func (p *pluginImpl) createMessage(user *slack.User) slack.MsgOption {
 	}
 
 	// Add image if any are provided
-	imageCount := len(messageOptions.ImageAttachments)
+	imageAttachments := messageOptions.ImageAttachments.Value()
+	imageCount := len(imageAttachments)
 
 	if imageCount > 0 {
 		logrus.WithField("count", imageCount).Debug("Choosing from images")
 		rand.Seed(time.Now().UTC().UnixNano())
-		attachment.ImageURL = messageOptions.ImageAttachments[rand.Intn(imageCount)]
+		attachment.ImageURL = imageAttachments[rand.Intn(imageCount)]
 	}
 
 	return slack.MsgOptionCompose(
@@ -254,7 +257,7 @@ func (p *pluginImpl) createMessage(user *slack.User) slack.MsgOption {
 
 // findSlackUser uses the slack API to find the user who made the commit that
 // is being built.
-func (p *pluginImpl) findSlackUser(api *slack.Client) (*slack.User, error) {
+func (p *Plugin) findSlackUser(api *slack.Client) (*slack.User, error) {
 	// get the mapping
 	mapping := p.settings.mapping
 
@@ -277,14 +280,14 @@ func (p *pluginImpl) findSlackUser(api *slack.Client) (*slack.User, error) {
 	}
 
 	if find == "" {
-		return nil, errors.New("No user to search for")
+		return nil, fmt.Errorf("No user to search for")
 	}
 
 	// search for the user
 	users, err := api.GetUsersContext(p.network.Context)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to query users")
+		return nil, fmt.Errorf("failed to query users: %w", err)
 	}
 
 	var blameUser *slack.User
