@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/drone-plugins/drone-plugin-lib/drone"
-	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
+	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 )
 

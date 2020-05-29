@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 )
 
 // userMapping gets the user mapping file.
