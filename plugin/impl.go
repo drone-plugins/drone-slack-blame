@@ -44,6 +44,14 @@ type (
 	searchFunc func(*slack.User, string) bool
 )
 
+const (
+	defaultSuccessTemplate = "Commit `{{ .Commit.SHA }}` to `{{ .Commit.Branch }}` by {{ .Commit.AuthorName }} built successfully!\n" +
+		"See above link for build output"
+
+	defaultFailureTemplate = "Commit `{{ .Commit.SHA }}` to `{{ .Commit.Branch }}` by {{ .Commit.AuthorName }} failed to build!\n" +
+		"See above link for build output"
+)
+
 // Validate handles the settings validation of the plugin.
 func (p *Plugin) Validate() error {
 	// Check the token
