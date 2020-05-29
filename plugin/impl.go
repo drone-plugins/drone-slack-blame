@@ -280,7 +280,7 @@ func (p *Plugin) findSlackUser(api *slack.Client) (*slack.User, error) {
 	}
 
 	if find == "" {
-		return nil, fmt.Errorf("No user to search for")
+		return nil, fmt.Errorf("no user to search for")
 	}
 
 	// search for the user
