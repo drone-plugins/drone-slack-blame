@@ -5,7 +5,10 @@
 
 package main
 
-import "github.com/urfave/cli/v2"
+import (
+	"github.com/drone-plugins/drone-slack-blame/plugin"
+	"github.com/urfave/cli/v2"
+)
 
 const (
 	defaultUsername = "drone"
@@ -13,7 +16,7 @@ const (
 )
 
 // settingsFlags has the cli.Flags for the plugin.Settings.
-func settingsFlags() []cli.Flag {
+func settingsFlags(settings *plugin.Settings) []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "token",
