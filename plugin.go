@@ -289,7 +289,7 @@ func userMapping(value string) map[string]string {
 func contents(s string) string {
 	if _, err := os.Stat(s); err == nil {
 		o, _ := ioutil.ReadFile(s)
-		return string(o)
+		return os.ExpandEnv(string(o))
 	}
 	if _, err := url.Parse(s); err == nil {
 		resp, err := http.Get(s)
@@ -298,9 +298,9 @@ func contents(s string) string {
 		}
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
-		return string(o)
+		return os.ExpandEnv(string(o))
 	}
-	return s
+	return os.ExpandEnv(s)
 }
 
 // checkEmail sees if the email is used by the user.
