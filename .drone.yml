@@ -310,13 +310,6 @@ steps:
       username:
         from_secret: docker_username
 
-  - name: microbadger
-    pull: always
-    image: plugins/webhook
-    settings:
-      urls:
-        from_secret: microbadger_url
-
 trigger:
   ref:
     - refs/heads/master
