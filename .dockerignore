@@ -1,2 +1,5 @@
 *
-!release/
+!go.mod
+!go.sum
+!main.go
+!plugin.go
