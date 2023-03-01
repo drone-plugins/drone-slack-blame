@@ -2,9 +2,10 @@ module github.com/drone-plugins/drone-slack-blame
 
 require (
 	github.com/drone/drone-template-lib v1.0.0
-	github.com/nlopes/slack v0.6.0
+	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
+	github.com/slack-go/slack v0.12.1
 	github.com/urfave/cli v1.22.10
 )
 
@@ -16,7 +17,8 @@ require (
 	github.com/aymerick/raymond v2.0.2+incompatible // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/google/uuid v1.1.1 // indirect
-	github.com/gorilla/websocket v1.4.1 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect

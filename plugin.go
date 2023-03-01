@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/drone/drone-template-lib/template"
-	"github.com/nlopes/slack"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/slack-go/slack"
 )
 
 type (
@@ -75,7 +76,9 @@ type (
 // Exec executes the plugin.
 func (p Plugin) Exec() error {
 	// create the API
-	api := slack.New(p.Config.Token)
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 2
+	api := slack.New(p.Config.Token, slack.OptionHTTPClient(retryClient.StandardClient()))
 
 	// verify the connection
 	authResponse, err := api.AuthTest()
@@ -97,6 +100,10 @@ func (p Plugin) Exec() error {
 	var userAt string
 
 	if p.User != nil {
+		logrus.WithFields(logrus.Fields{
+			"username": p.User.Name,
+		}).Info("Found user")
+
 		userAt = fmt.Sprintf("@%s", p.User.Name)
 
 		_, _, err := api.PostMessage(userAt, messageOptions)
@@ -222,11 +229,12 @@ func (p Plugin) findSlackUser(api *slack.Client) (*slack.User, error) {
 		search = checkUsername
 		find = val
 	} else {
+		// if using email then we call api.GetUserByEmail directlywhich is more efficient
 		logrus.WithFields(logrus.Fields{
 			"email": p.Build.Email,
 		}).Info("Searching for user by email")
-		search = checkEmail
-		find = p.Build.Email
+
+		return api.GetUserByEmail(p.Build.Email)
 	}
 
 	if len(find) == 0 {
@@ -301,11 +309,6 @@ func contents(s string) string {
 		return os.ExpandEnv(string(o))
 	}
 	return os.ExpandEnv(s)
-}
-
-// checkEmail sees if the email is used by the user.
-func checkEmail(user *slack.User, email string) bool {
-	return strings.EqualFold(user.Profile.Email, email)
 }
 
 // checkUsername sees if the username is the same as the user.
