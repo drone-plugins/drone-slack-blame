@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -177,6 +178,10 @@ func main() {
 			Usage:  "previous build sha",
 			EnvVar: "DRONE_PREV_COMMIT_SHA",
 		},
+	}
+
+	if _, err := os.Stat("/run/drone/env"); err == nil {
+		godotenv.Overload("/run/drone/env")
 	}
 
 	if err := app.Run(os.Args); err != nil {
