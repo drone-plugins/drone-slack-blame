@@ -1,4 +1,8 @@
-FROM plugins/base:multiarch
+FROM alpine:3.19@sha256:6baf43584bcb78f2e5847d1de515f23499913ac9f12bdf834811a3145eb11ca1 AS certificates
+RUN apk --no-cache add "ca-certificates>=20261020-r0"
+
+FROM plugins/base:multiarch@sha256:5f8ee491ed20a4333899b43624e30232a02b450f7f0ce0bd4797e22216ebe579
+COPY --from=certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 LABEL maintainer="Drone.IO Community <drone-dev@googlegroups.com>" \
   org.label-schema.name="Drone Slack Blame" \
